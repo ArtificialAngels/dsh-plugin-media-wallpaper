@@ -180,6 +180,7 @@ export function stop(): void {
     const body = document.body
     body.removeAttribute('data-wp-fallback')
     body.removeAttribute('data-wp-active')
+    body.removeAttribute('data-wp-walltext')
     body.removeAttribute('data-wp-t-sidebar')
     body.removeAttribute('data-wp-t-topbar')
     body.removeAttribute('data-wp-t-main')
@@ -188,6 +189,7 @@ export function stop(): void {
     body.removeAttribute('data-wp-t-composer')
     body.removeAttribute('data-wp-t-plugins')
     body.removeAttribute('data-wp-tint')
+    body.style.removeProperty('--wp-text-on-wall')
   }
   fallback = false
   retryIndex = 0
