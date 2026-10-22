@@ -109,6 +109,8 @@ dsh web --patch "E:\Deepseek Harness\dsh-plugin-wallpaper\cordis.patch.yml"
 - 开屏动画层 `pointer-events:none`：不吞点击，所以也不能"点一下跳过"（与 dsh-chat-wallpaper 的选择一致）；播不出来时会在 2 秒内自动撤层
 - 开屏动画的「等开机动画结束」依赖 `#dsh-startup-root` 与 `dsu-handoff` / `dsu-gone` class（与 dsh-startup-screen 的约定）；没装开机动画插件时宽限 3 秒后直接播
 - 色调取样对动图取首帧（对色调跟随足够稳定）
+- 「界面色调跟随背景」在侧栏 / 右栏上的叠加会随各自不透明度淡出：把侧栏滑到 0 时叠加也不会再出现（避免 0% 的侧栏还盖着一层颜色）
+- 「组件透明化」控制的是各区域的**底色**：侧栏里的按钮 / 会话行、输入框、气泡分别属于「卡片与面板 / 输入栏」，需要单独调；桌面客户端的**原生窗口菜单栏与窗口按钮**由桌面壳绘制，不在网页内容里，「顶栏 / 标题栏」只能控制网页内的标题栏拖拽条
 - 壁纸文件存于浏览器 IndexedDB：清理浏览器数据会丢失壁纸与设置（重新选择即可）
 - 透明化基值取自官方 `design-platform.css` 当前语义（bg-layer 静态值含亮 / 暗分支）；若官方大版本重构 token，需同步更新 `src/client/styles.ts`
 

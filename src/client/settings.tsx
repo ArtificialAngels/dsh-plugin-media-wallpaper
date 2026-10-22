@@ -67,6 +67,7 @@ const STR = {
     accentAuto: '主色调跟随背景',
     finishHint: '作用于输入框、新对话与设置面板等前景 UI；背景模糊请用高斯模糊滑杆',
     opacityHint: '开关控制该区域是否透出壁纸，滑杆单独调节各自的不透明度',
+    transparencyHint: '顶栏 / 标题栏只作用于网页内的标题栏拖拽条；桌面窗口最上方的原生菜单栏与窗口按钮由桌面壳绘制，插件无法改变。侧栏 / 右栏的色调叠加会随各自不透明度一起淡出；按钮、气泡等属于「卡片与面板」。',
     opaque: '不透明',
     transparency: '组件透明化',
     tSidebar: '侧栏',
@@ -140,6 +141,7 @@ const STR = {
     accentAuto: 'Accent follows background',
     finishHint: 'Applies to composer, hero and settings panels; use Gaussian blur for the background',
     opacityHint: 'Toggle whether a region shows the wallpaper; each slider adjusts its own opacity',
+    transparencyHint: 'Top bar / title bar only affects the in-page title-bar drag strip; the native window menu bar and window buttons are drawn by the desktop shell and cannot be changed by this plugin. The sidebar/right-bar tint fades with their own opacity; buttons and bubbles belong to "Cards & panels".',
     opaque: 'Opaque',
     transparency: 'Component transparency',
     tSidebar: 'Sidebar',
@@ -748,6 +750,7 @@ export function WallpaperSection(): ReactNode {
             </span>
           </div>
         ))}
+        <div className="wp-hint">{t.transparencyHint}</div>
       </div>
 
       <div className="wp-row">
