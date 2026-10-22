@@ -344,13 +344,21 @@ body[data-wp-active] [data-wp-right] {
   position: relative;
   isolation: isolate;
 }
-body[data-wp-active][data-wp-tint='1'] [data-wp-sidebar]::before,
+body[data-wp-active][data-wp-tint='1'] [data-wp-sidebar]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* 侧栏的色调叠加随侧栏不透明度衰减（surface.ts 写入 --wp-tint-mix-sidebar） */
+  background: color-mix(in srgb, var(--wp-tint) var(--wp-tint-mix-sidebar, var(--wp-tint-mix)), transparent);
+  pointer-events: none;
+}
 body[data-wp-active][data-wp-tint='1'] [data-wp-right]::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: color-mix(in srgb, var(--wp-tint) var(--wp-tint-mix), transparent);
+  background: color-mix(in srgb, var(--wp-tint) var(--wp-tint-mix-right, var(--wp-tint-mix)), transparent);
   pointer-events: none;
 }
 
