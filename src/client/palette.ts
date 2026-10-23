@@ -71,7 +71,8 @@ function computeColor(source: CanvasImageSource): string | null {
 }
 
 function sampleVideo(): void {
-  if (!video || video.readyState < 2 || video.videoWidth === 0) return
+  if (!video || video.paused || document.hidden) return // 暂停/隐藏时不做无效取样
+  if (video.readyState < 2 || video.videoWidth === 0) return
   emit(computeColor(video))
 }
 

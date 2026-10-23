@@ -25,7 +25,7 @@ const assert = (cond, msg) => {
 const code = readFileSync(join(root, 'lib/client.js'), 'utf8')
 assert(code.startsWith(`window.__ModuleLoader__.load({ id: '${PKG}', factory: (require) => {`), `客户端 bundle 以官方 __ModuleLoader__ 包装开头（id=${PKG}）`)
 assert(code.trimEnd().endsWith('return module.exports;\n} });'), '客户端 bundle 以官方包装结尾')
-assert(!code.includes("'dsh-plugin-wallpaper'") && !code.includes('"dsh-plugin-wallpaper"'), '包名统一：bundle 内无旧名残留')
+assert(!/["']dsh-plugin-wallpaper["']/.test(code.replace(/dsh-plugin-media-wallpaper/g, '')), '包名统一：bundle 内无旧名残留')
 
 const registrations = []
 const windowStub = { __ModuleLoader__: { load: (reg) => registrations.push(reg) } }

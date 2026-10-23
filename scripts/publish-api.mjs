@@ -8,6 +8,7 @@
  * 用法：npm run publish:api [-- "commit message"]
  */
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, sep, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,7 +21,8 @@ if (!m) {
   process.exit(1)
 }
 const REPO = m[1]
-const SKIP = new Set(['.git', 'node_modules', 'build'])
+// walk 只按名字排除（文件与目录通用）；HANDOFF.md 是内部交接文档，不入公开仓库
+const SKIP = new Set(['.git', 'node_modules', 'build', 'HANDOFF.md'])
 const DEFAULT_BRANCH = 'main'
 const VERSION_TAG = `v${pkg.version}`
 
@@ -43,18 +45,31 @@ let token = null
 async function uploadBlob(path, filePath) {
   token ??= ghToken()
   const content = readFileSync(filePath).toString('base64')
-  const res = await fetch(`https://api.github.com/repos/${REPO}/git/blobs`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ content, encoding: 'base64' }),
-  })
-  const json = await res.json()
-  if (!res.ok) throw new Error(`blob ${path}: ${json.message}`)
-  return json
+  // 瞬态网络错误自动重试（malformed/连接中断等），每次间隔递增
+  let lastErr = null
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/git/blobs`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content, encoding: 'base64' }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(`blob ${path}: HTTP ${res.status} ${json.message ?? ''}`)
+      return json
+    } catch (err) {
+      lastErr = err
+      if (attempt < 3) {
+        console.log(`retry ${attempt}/2 for ${path}`)
+        await new Promise((r) => setTimeout(r, 5000 * attempt))
+      }
+    }
+  }
+  throw lastErr
 }
 
 function walk(dir) {
@@ -80,12 +95,38 @@ try {
   console.log(`seed ${parentSha}`)
 }
 
+// ---- 0.5) 内容未变的文件直接复用远端 blob，不再上传 ----
+// 大 blob（~17MB 分卷）经本机网络直传易被损坏成 HTTP 400 malformed；
+// 而 presets 媒体跨版本不变，按 git blob SHA-1 比对远端树即可整体跳过。
+const remoteBlobs = new Map()
+try {
+  const t = gh(`/repos/${REPO}/git/trees/${parentSha}?recursive=1`, null, 'GET')
+  for (const e of t.tree ?? []) if (e.type === 'blob') remoteBlobs.set(e.path, e.sha)
+} catch (err) {
+  console.log(`remote tree unavailable (${err.message}), will upload everything`)
+}
+
+function localBlobSha(filePath) {
+  const content = readFileSync(filePath)
+  const h = createHash('sha1')
+  h.update(`blob ${content.length}\0`)
+  h.update(content)
+  return h.digest('hex')
+}
+
 // ---- 1) 整棵树 ----
 const tree = []
 for (const full of walk(ROOT)) {
   const rel = relative(ROOT, full).split(sep).join('/')
+  const sha = localBlobSha(full)
+  if (remoteBlobs.get(rel) === sha) {
+    tree.push({ path: rel, mode: '100644', type: 'blob', sha })
+    console.log(`blob ${rel} -> ${sha.slice(0, 8)} (unchanged, reuse)`)
+    continue
+  }
   const blob = await uploadBlob(rel, full)
-  tree.push({ path: rel, mode: '100644', type: 'blob', sha: blob.sha })
+  if (blob.sha !== sha) throw new Error(`blob ${rel}: 上传后 SHA 与本地不符 ${blob.sha} != ${sha}`)
+  tree.push({ path: rel, mode: '100644', type: 'blob', sha })
   console.log(`blob ${rel} -> ${blob.sha.slice(0, 8)}`)
 }
 const treeRes = gh(`/repos/${REPO}/git/trees`, { tree })
