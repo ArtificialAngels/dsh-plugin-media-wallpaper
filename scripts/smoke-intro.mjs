@@ -83,6 +83,8 @@ function makeDocument() {
   const html = makeElement('html')
   return {
     readyState: 'complete',
+    hidden: false,
+    visibilityState: 'visible',
     documentElement: html,
     head,
     body,
@@ -91,6 +93,7 @@ function makeDocument() {
     querySelectorAll: () => [],
     getElementById: () => null,
     addEventListener() {},
+    removeEventListener() {},
   }
 }
 
