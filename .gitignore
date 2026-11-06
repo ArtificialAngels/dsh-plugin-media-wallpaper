@@ -8,3 +8,6 @@ node_modules/
 # 更新代码后须 `npm run build` 并把 lib/ 一并提交。
 presets/build/
 presets/*.zip
+
+# 本地打包产物（Release 用，不入库）
+.artifacts/

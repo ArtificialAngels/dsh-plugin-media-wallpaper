@@ -6,6 +6,8 @@ DeepSeek Harness（DSH）壁纸插件 —— 在 Web UI / 桌面版中更换图�
 
 > 命名说明：npm 包名与 GitHub 仓库均为 **`dsh-plugin-media-wallpaper`**（npm 原名 `dsh-plugin-wallpaper` 已被他人占用，故改名）。
 
+> **本仓库是定制分支**：fork 自 [laoye666-6/dsh-plugin-media-wallpaper](https://github.com/laoye666-6/dsh-plugin-media-wallpaper)，`main` 分支即定制版（基于上游 0.3.0 + 开屏动画 / 主题联动等改动，见「定制版变更」）。安装请认准本仓库地址，不要装 npm 上游旧版。
+
 ## 功能
 
 - **图片 / 视频背景**：GIF、动图 WebP、APNG、静态 PNG / JPEG 图片；MP4、WebM 视频（自动循环静音播放）
@@ -19,6 +21,17 @@ DeepSeek Harness（DSH）壁纸插件 —— 在 Web UI / 桌面版中更换图�
 - **开屏动画（可选）**：启动时先全屏播放一段动画（视频 / GIF / 动图 WebP / APNG / 图片），播完渐隐，露出聊天与壁纸；会等开机动画开始收场再满不透明接上（交叉叠化），每会话只播一次，不挡点击
 - **双设置入口**：侧栏 → 设置 → 「壁纸」分区；以及 插件管理 → 本插件详情页
 - 自动尊重系统「减弱透明度」可达性偏好；插件停用后界面完全还原（含样式回收）
+
+## 定制版变更（相对上游 0.3.0）
+
+本仓库在 [laoye666-6/dsh-plugin-media-wallpaper](https://github.com/laoye666-6/dsh-plugin-media-wallpaper) 0.3.0 基础上增加：
+
+- **开屏动画（可选）**：启动时先全屏播放一段动画（视频 / GIF / 动图 WebP / APNG / 图片），播完渐隐露出壁纸；可调渐隐时长、图片停留时长、填充方式，可选「同一会话只播一次」「等开机动画收场后再接上」；支持预览播放（`src/client/intro.ts`）
+- **设置页主题三选项**：浅色 / 深色 / 跟随主题，直接联动 DSH 全局主题服务（与 设置 → 通用设置 → 外观 双向同步）；新增自动字色（按文字实际压在壁纸上的明暗分区选深 / 浅字，深色模式不会反色）
+- **色调叠加跟随不透明度**：侧栏 / 右栏的界面色调叠加随各自不透明度淡出，修正组件透明度 0% 时仍残留一层颜色的不一致
+- **卸载更干净**：移除 `visibilitychange` 监听；smoke-intro 覆盖开屏动画生命周期
+
+上游功能与限制见下文；问题请提到本仓库 Issues（上游仓库仍由原作者维护）。
 
 ## 版本兼容
 
@@ -40,41 +53,43 @@ npm run smoke        # 可选：Node 最小 DOM 桩自检
 
 ## 安装到 DSH
 
-**方式一（推荐，国内网络）：npm 源安装** —— 自动走你配置的镜像（如 npmmirror.com），不触碰 GitHub：
+**方式一：GitHub 一条指令（推荐）**
 
 ```sh
-dsh plugin --profile dshwallpaper add dsh-plugin-media-wallpaper
-dsh --profile dshwallpaper   # 启动该组合
+dsh plugin --profile <你的profile名> add github:ArtificialAngels/dsh-plugin-media-wallpaper
 ```
 
-**方式二：GitHub 一条指令安装**（任何机器）：
-
-```sh
-dsh plugin --profile dshwallpaper add github:laoye666-6/dsh-plugin-media-wallpaper
-```
-
-- 仓库内置预构建产物，拉取即用；插件无构建脚本，pnpm ≥ 10 亦无需授权（无需 allowBuilds）
+- 仓库内置预构建产物 `lib/`，拉取即用，无需构建、无需 allowBuilds 授权
 - 首次使用会自动初始化 profile（以 `@deepseek-ai/dsh-base` 为第一个组合包）
-- 安全建议：可锁定提交安装 —— `github:laoye666-6/dsh-plugin-media-wallpaper#<commit-sha>`
+- 建议锁定提交，升级 / 回滚都可控：`github:ArtificialAngels/dsh-plugin-media-wallpaper#<commit-sha>`
+- 等价 GUI 路径：插件管理 → 添加插件 → 粘贴 `https://github.com/ArtificialAngels/dsh-plugin-media-wallpaper`
 
-**方式三（本机开发路径）**：
+**方式二：Release 离线包（内网 / GitHub 拉不动时）**
 
-```sh
-dsh plugin --profile dshwallpaper add "E:\Deepseek Harness\dsh-plugin-wallpaper"
-```
-
-**方式四（开发调试，免安装）**：
+从 [Releases](https://github.com/ArtificialAngels/dsh-plugin-media-wallpaper/releases) 下载 `dsh-plugin-media-wallpaper-0.3.0-custom.1.tgz`，然后：
 
 ```sh
-dsh web --patch "E:\Deepseek Harness\dsh-plugin-wallpaper\cordis.patch.yml"
+dsh plugin --profile <你的profile名> add "D:\path\to\dsh-plugin-media-wallpaper-0.3.0-custom.1.tgz"
 ```
 
-关于 profile 名（示例用 `dshwallpaper`；profile = DSH 的命名配置组合，位于 `$DSH_HOME/profiles/<名字>/`，决定启动时加载哪些 bundle）：
+**方式三：本地目录（自己改代码时）**
+
+```sh
+dsh plugin --profile <你的profile名> add "E:\path\to\dsh-plugin-media-wallpaper-custom"
+```
+
+**方式四：免安装调试**
+
+```sh
+dsh web --patch "E:\path\to\dsh-plugin-media-wallpaper-custom\cordis.patch.yml"
+```
+
+关于 profile 名（profile = DSH 的命名配置组合，位于 `$DSH_HOME/profiles/<名字>/`，决定启动时加载哪些 bundle）：
 
 - 名字自己取，首次安装时不存在会自动创建（以 `@deepseek-ai/dsh-base` 初始化）；之后启动也用同名
 - 自己命令启动：装和启用用同一个名字即可
 - 桌面版（Electron 壳）：若其启动参数/快捷方式带 `--profile xxx`，就用那个名字安装，保证插件装进壳实际使用的组合
-- 验证是否装对：`dsh --profile dshwallpaper --dump-config`，输出出现 `# == dsh-plugin-media-wallpaper` 一层即成功
+- 验证是否装对：`dsh --profile <名字> --dump-config`，输出出现 `# == dsh-plugin-media-wallpaper` 一层即成功
 
 安装后重启 `dsh web` 或桌面版客户端。
 
@@ -117,11 +132,19 @@ dsh web --patch "E:\Deepseek Harness\dsh-plugin-wallpaper\cordis.patch.yml"
 ## 发布流程（维护者）
 
 1. 修改代码 → `npm run build && npm run typecheck && npm run smoke`
-2. 提交（**必须包含更新后的 `lib/`**，git 安装用户拿到的是预构建产物）
-3. 发布，按渠道：
-   - **npm（国内推荐渠道）**：`npm login` 后执行 `npm publish`；npmmirror 会自动同步（也可 `curl -X PUT https://registry.npmmirror.com/-/package/dsh-plugin-media-wallpaper/syncs` 催一下）
-   - **GitHub**：网络可达时 `git push origin main --tags`（首次远端为 API 引导的历史，需 `--force` 对齐）；git push 不通时 `npm run publish:api -- "commit message"` 经 REST API 整树发布
-4. 安装端锁定版本建议：npm 固定 `dsh-plugin-media-wallpaper@<version>`；GitHub 固定 `#<commit-sha>`
+2. 提交（**必须包含更新后的 `lib/`**，git 安装用户拿到的是预构建产物；`lib/` 已在 `.gitattributes` 关闭换行转换）
+3. 推送 + 发 Release（本仓库 = 定制分发渠道）：
+
+   ```sh
+   git push origin main
+   git tag v0.3.0-custom.N && git push origin v0.3.0-custom.N
+   npm pack                      # 产出 dsh-plugin-media-wallpaper-0.3.0.tgz
+   gh release create v0.3.0-custom.N *.tgz --title "0.3.0-custom.N" --notes "<更新说明>"
+   ```
+
+4. 安装端锁定版本建议：GitHub 固定 `github:ArtificialAngels/dsh-plugin-media-wallpaper#<commit-sha>`；离线包固定 tgz 文件名
+5. 回贡上游（可选）：`git push upstream custom/0.3`，再到上游仓库发 PR（本仓库 `upstream` 远端指向上游）
+6. 本仓库**不发布 npm**：npm 上的同名包属于上游，避免版本号冲突；分发只走 GitHub 与 Release
 
 ## 目录结构
 
